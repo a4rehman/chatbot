@@ -103,3 +103,5 @@ wrapt==2.0.1
 xxhash==3.6.0
 zstandard==0.25.0
 numpy==2.4.1
+langchain-community
+tavily-python 
