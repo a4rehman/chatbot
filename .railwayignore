@@ -1,0 +1,11 @@
+# railwayignore
+myenv/
+myenv_new/
+test_env/
+__pycache__/
+*.pyc
+.env
+.git
+.vscode
+.idea
+*.db
