@@ -45,7 +45,14 @@ except Exception as e:
 tool_node = ToolNode(tools)
 
 # LLM setup with tools
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0).bind_tools(tools)
+api_key = os.getenv("OPENAI_API_KEY")
+print("API Key loaded:", api_key[:12] + "..." if api_key else "NOT FOUND")
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0,
+    api_key=api_key,
+).bind_tools(tools)
 
 class ChatState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
