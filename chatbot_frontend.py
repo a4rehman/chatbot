@@ -1,9 +1,9 @@
 import streamlit as st
 import os
-from chatbot_backend import chatbot
+from chatbot_backend import chatbot, langsmith_client, langsmith_project
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.tracers.context import collect_runs
-from langsmith import Client as LangSmithClient
+from langsmith import tracing_context
 import uuid
 import pandas as pd
 from pypdf import PdfReader
@@ -15,41 +15,51 @@ from openai import RateLimitError
 # Set page config
 st.set_page_config(page_title="100Solutionz AI Assistant", layout="wide", page_icon="🤖")
 
-# Initialize LangSmith client
-ls_client = None
-if os.getenv("LANGCHAIN_API_KEY"):
-    try:
-        ls_client = LangSmithClient()
-    except Exception as e:
-        print("LangSmith client initialization notice:", e)
+ls_client = langsmith_client
+
+# Upload limits protect the app from oversized or malformed user-supplied files.
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_PDF_PAGES = 50
+MAX_SPREADSHEET_ROWS = 1_000
+MAX_CONTEXT_CHARS = 30_000
+Image.MAX_IMAGE_PIXELS = 20_000_000
 
 # **************************************** Utility Functions *************************
 
 def extract_file_content(uploaded_file):
-    """Extracts content from different file types using pypdf and pandas."""
+    """Extracts bounded text/image content from an allowed uploaded file."""
     try:
         filename = uploaded_file.name
+        if uploaded_file.size > MAX_UPLOAD_BYTES:
+            return f"\n[File: {filename}] was skipped because it exceeds the 10 MB safety limit.\n"
+
         if uploaded_file.type == "application/pdf":
             reader = PdfReader(uploaded_file)
+            if len(reader.pages) > MAX_PDF_PAGES:
+                return f"\n[File: {filename}] was skipped because it exceeds the {MAX_PDF_PAGES}-page safety limit.\n"
             text = ""
             for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-            
+                page_text = page.extract_text() or ""
+                text += page_text + "\n"
+                if len(text) >= MAX_CONTEXT_CHARS:
+                    break
             if not text.strip():
-                return f"\n[File: {filename}] - (Warning: This PDF seems to be an image or scanned document.)\n"
-            return f"\n--- Start of File: {filename} ---\n{text}\n--- End of File: {filename} ---\n"
-        
-        elif uploaded_file.type in ["text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
+                return f"\n[File: {filename}] could not provide readable text.\n"
+            return f"\n--- Start of File: {filename} ---\n{text[:MAX_CONTEXT_CHARS]}\n--- End of File: {filename} ---\n"
+
+        if uploaded_file.type in ["text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
+            if uploaded_file.name.lower().endswith('.csv'):
+                df = pd.read_csv(uploaded_file, nrows=MAX_SPREADSHEET_ROWS)
             else:
-                df = pd.read_excel(uploaded_file)
-            return f"\n--- Start of Spreadsheet: {filename} ---\n{df.to_string()}\n--- End of Spreadsheet: {filename} ---\n"
-        
-        elif uploaded_file.type.startswith("image/"):
+                df = pd.read_excel(uploaded_file, nrows=MAX_SPREADSHEET_ROWS)
+            table_text = df.to_string(index=False)[:MAX_CONTEXT_CHARS]
+            return f"\n--- Start of Spreadsheet: {filename} ---\n{table_text}\n--- End of Spreadsheet: {filename} ---\n"
+
+        if uploaded_file.type.startswith("image/"):
             image = Image.open(uploaded_file)
+            if image.width * image.height > Image.MAX_IMAGE_PIXELS:
+                return f"\n[File: {filename}] was skipped because its image dimensions exceed the safety limit.\n"
+            image.load()
             mime_type = uploaded_file.type
             buffered = BytesIO()
             if image.mode in ("RGBA", "P"):
@@ -58,10 +68,10 @@ def extract_file_content(uploaded_file):
             image.save(buffered, format=fmt)
             img_str = base64.b64encode(buffered.getvalue()).decode()
             return f"IMAGE_DATA_BASE64|{mime_type}|{img_str}|{filename}"
-            
-        return ""
-    except Exception as e:
-        return f"\nError processing file {uploaded_file.name}: {str(e)}\n"
+
+        return f"\n[File: {filename}] was skipped because its type is not allowed.\n"
+    except Exception:
+        return f"\n[File: {uploaded_file.name}] could not be processed safely.\n"
 
 def parse_metadata(content):
     """Helper to clean up markers from response for clean UI display."""
@@ -126,8 +136,8 @@ st.sidebar.title('Advanced LangGraph Bot')
 st.sidebar.info("100Solutionz Engineering Edition")
 
 # LangSmith Status Badge
-project_name = os.getenv("LANGCHAIN_PROJECT", "solutionz-chatbot")
-if os.getenv("LANGCHAIN_TRACING_V2") == "true" and os.getenv("LANGCHAIN_API_KEY"):
+project_name = langsmith_project
+if ls_client:
     st.sidebar.success(f"📊 LangSmith Tracing Active\n\nProject: **{project_name}**")
 else:
     st.sidebar.warning("📊 LangSmith Tracing Inactive")
@@ -216,8 +226,8 @@ if user_input:
                     text_context += result
 
     # Truncation safety check to prevent context length error
-    if len(text_context) > 30000:
-        text_context = text_context[:30000] + f"\n\n[Context truncated to 30,000 characters for token limit safety. Original size: {len(text_context)} characters.]"
+    if len(text_context) > MAX_CONTEXT_CHARS:
+        text_context = text_context[:MAX_CONTEXT_CHARS] + f"\n\n[Attachment context truncated for safety. Original size: {len(text_context)} characters.]"
 
     # 2. Update UI with User message
     st.session_state['message_history'].append({'role': 'user', 'content': user_input})
@@ -231,7 +241,7 @@ if user_input:
         "metadata": {"user_id": user_id, "session_id": st.session_state["thread_id"]}
     }
     
-    context_instruction = f"\n\n[ATTACHED_FILES_CONTEXT]\n{text_context}\n" if text_context else ""
+    context_instruction = f"\n\n[UNTRUSTED_ATTACHMENT_DATA]\n{text_context}\n[/UNTRUSTED_ATTACHMENT_DATA]\n" if text_context else ""
     final_query = user_input + context_instruction
 
     if images_to_send:
@@ -252,19 +262,20 @@ if user_input:
         
         with st.spinner("Deep Analysis..."):
             try:
-                with collect_runs() as cb:
-                    for chunk, metadata in chatbot.stream(
-                        {'messages': [HumanMessage(content=msg_content)]},
-                        config=CONFIG,
-                        stream_mode='messages'
-                    ):
-                        if isinstance(chunk, AIMessage) and chunk.content:
-                            full_response += chunk.content
-                            display_text = full_response.split("[REASONING]")[0].replace("[RESPONSE]", "").strip()
-                            placeholder.markdown(display_text)
-                    
-                    if cb.traced_runs:
-                        run_id = str(cb.traced_runs[0].id)
+                with tracing_context(client=ls_client, project_name=project_name, enabled=bool(ls_client)):
+                    with collect_runs() as cb:
+                        for chunk, metadata in chatbot.stream(
+                            {'messages': [HumanMessage(content=msg_content)]},
+                            config=CONFIG,
+                            stream_mode='messages'
+                        ):
+                            if isinstance(chunk, AIMessage) and chunk.content:
+                                full_response += chunk.content
+                                display_text = full_response.split("[REASONING]")[0].replace("[RESPONSE]", "").strip()
+                                placeholder.markdown(display_text)
+
+                        if cb.traced_runs:
+                            run_id = str(cb.traced_runs[0].id)
             except RateLimitError:
                 full_response = (
                     "[RESPONSE]\nThe AI service is temporarily unavailable because its usage limit "
