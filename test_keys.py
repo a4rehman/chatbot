@@ -11,24 +11,24 @@ print("=" * 60)
 print("SOLUTIONZ CHATBOT - API KEY & LANGSMITH VERIFICATION")
 print("=" * 60)
 
-openai_key = os.getenv("OPENAI_API_KEY")
+openrouter_key = os.getenv("OPENROUTER_API_KEY")
 langsmith_key = os.getenv("LANGCHAIN_API_KEY")
 langsmith_project = os.getenv("LANGCHAIN_PROJECT", "solutionz-chatbot")
 
-print(f"1. OpenAI API Key: {'[OK] Present (' + openai_key[:12] + '...)' if openai_key else '[FAIL] Missing'}")
+print(f"1. OpenRouter API Key: {'[OK] Present (' + openrouter_key[:12] + '...)' if openrouter_key else '[FAIL] Missing'}")
 print(f"2. LangSmith API Key: {'[OK] Present (' + langsmith_key[:12] + '...)' if langsmith_key else '[FAIL] Missing'}")
 print(f"3. LangSmith Tracing: {os.getenv('LANGCHAIN_TRACING_V2')}")
 print(f"4. LangSmith Project: {langsmith_project}")
 
-# Test OpenAI Connection
+# Test OpenRouter Connection
 try:
     from langchain_openai import ChatOpenAI
-    llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_key)
-    res = llm.invoke("Say 'OpenAI connection successful!'")
-    print(f"\n[OpenAI Test Output]: {res.content.strip()}")
-    print("[OK] OpenAI API Test Passed!")
+    llm = ChatOpenAI(model=os.getenv("OPENROUTER_MODEL", "openrouter/free"), base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"), api_key=openrouter_key)
+    res = llm.invoke("Say 'OpenRouter connection successful!'")
+    print(f"\n[OpenRouter Test Output]: {res.content.strip()}")
+    print("[OK] OpenRouter API Test Passed!")
 except Exception as e:
-    print(f"[FAIL] OpenAI API Test Failed: {e}")
+    print(f"[FAIL] OpenRouter API Test Failed: {e}")
 
 # Test LangSmith Connection
 try:

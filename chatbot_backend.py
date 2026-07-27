@@ -59,13 +59,18 @@ except Exception as e:
 tool_node = ToolNode(tools)
 
 # LLM setup with conditional tools binding
-api_key = os.getenv("OPENAI_API_KEY")
-print("API Key loaded:", api_key[:12] + "..." if api_key else "NOT FOUND")
+api_key = os.getenv("OPENROUTER_API_KEY")
+model_name = os.getenv("OPENROUTER_MODEL", "openrouter/free")
+base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+if not api_key:
+    raise RuntimeError("OPENROUTER_API_KEY is not configured. Add it to Streamlit Secrets or .env.")
 
 base_llm = ChatOpenAI(
-    model="gpt-4o-mini",
+    model=model_name,
     temperature=0,
     api_key=api_key,
+    base_url=base_url,
 )
 
 llm = base_llm.bind_tools(tools) if tools else base_llm
