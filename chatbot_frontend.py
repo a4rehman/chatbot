@@ -14,6 +14,30 @@ from openai import RateLimitError
 
 # Set page config
 st.set_page_config(page_title="100Solutionz AI Assistant", layout="wide", page_icon="🤖")
+st.markdown("""
+<style>
+    :root { --accent: #4ade80; --blue: #60a5fa; --ink: #08111f; }
+    .stApp { background: radial-gradient(circle at 82% 3%, rgba(37, 99, 235, .17), transparent 30%), radial-gradient(circle at 5% 75%, rgba(34, 197, 94, .10), transparent 32%), #08111f; }
+    [data-testid="stSidebar"] { background: linear-gradient(180deg, #0d1a2d 0%, #0a1424 100%); border-right: 1px solid rgba(148,163,184,.16); }
+    [data-testid="stSidebar"] > div:first-child { padding-top: 1.4rem; }
+    .brand-card { padding: 1.2rem; border-radius: 18px; background: linear-gradient(135deg, rgba(96,165,250,.17), rgba(74,222,128,.11)); border: 1px solid rgba(125,211,252,.24); margin-bottom: 1rem; }
+    .brand-kicker { color: #86efac; font-size: .72rem; letter-spacing: .12em; font-weight: 800; text-transform: uppercase; }
+    .brand-title { color: #f8fafc; font-size: 1.38rem; line-height: 1.15; font-weight: 800; margin-top: .3rem; }
+    .brand-copy { color: #b8c7db; font-size: .82rem; margin-top: .45rem; line-height: 1.45; }
+    .hero { padding: 1.7rem 1.85rem; margin: .4rem 0 1.35rem; border-radius: 24px; background: linear-gradient(120deg, rgba(30,58,138,.42), rgba(6,78,59,.28)); border: 1px solid rgba(125,211,252,.22); box-shadow: 0 18px 50px rgba(0,0,0,.18); }
+    .hero-kicker { color: #86efac; font-size: .78rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .hero h1 { color: #f8fafc; margin: .35rem 0 .42rem; font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.06; }
+    .hero p { color: #b9c8da; margin: 0; font-size: 1rem; }
+    .status-pill { display:inline-block; margin-top:.8rem; padding:.33rem .7rem; border-radius: 999px; font-size:.78rem; color:#bbf7d0; background:rgba(34,197,94,.12); border:1px solid rgba(74,222,128,.24); }
+    [data-testid="stChatMessage"] { border: 1px solid rgba(148,163,184,.14); border-radius: 18px; padding: .35rem .55rem; margin-bottom: .8rem; background: rgba(15,23,42,.48); }
+    [data-testid="stChatInput"] { border-radius: 18px; border: 1px solid rgba(96,165,250,.5); background: rgba(15,23,42,.86); box-shadow: 0 10px 28px rgba(0,0,0,.2); }
+    [data-testid="stChatInput"]:focus-within { border-color: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.12); }
+    [data-testid="stFileUploader"] { padding: .65rem; border-radius: 14px; border: 1px dashed rgba(125,211,252,.34); background: rgba(15,23,42,.38); }
+    .stButton > button { border-radius: 12px; border: 1px solid rgba(125,211,252,.25); background: rgba(30,41,59,.7); color: #e2e8f0; transition: .2s ease; }
+    .stButton > button:hover { border-color: #4ade80; color: #f0fdf4; background: rgba(22,101,52,.28); transform: translateY(-1px); }
+    [data-testid="stSidebar"] .stAlert { border-radius: 14px; }
+</style>
+""", unsafe_allow_html=True)
 
 langsmith_project = os.getenv("LANGSMITH_PROJECT") or os.getenv("LANGCHAIN_PROJECT") or "solutionz-chatbot"
 langsmith_api_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
@@ -145,9 +169,14 @@ if 'thread_id' not in st.session_state:
 
 # **************************************** Sidebar UI *********************************
 
-st.sidebar.markdown(f"### 👤 User ID: **{user_id}**")
-st.sidebar.title('Advanced LangGraph Bot')
-st.sidebar.info("100Solutionz Engineering Edition")
+st.sidebar.markdown(f"""
+<div class="brand-card">
+  <div class="brand-kicker">100Solutionz</div>
+  <div class="brand-title">Intelligent AI Workspace</div>
+  <div class="brand-copy">Secure AI assistance for product, engineering, and company information.</div>
+  <div class="status-pill">Session {user_id}</div>
+</div>
+""", unsafe_allow_html=True)
 
 # LangSmith Status Badge
 project_name = langsmith_project
@@ -202,8 +231,14 @@ if st.sidebar.checkbox('🔍 Show Backend Process'):
 
 # **************************************** Main UI ************************************
 
-st.title("🤖 100Solutionz Intelligent AI Assistant")
-st.caption(f"Session: {st.session_state['thread_id'][:8]} | Traced via LangSmith: {project_name}")
+st.markdown(f"""
+<div class="hero">
+  <div class="hero-kicker">100Solutionz • AI & Software Studio</div>
+  <h1>Intelligent AI Assistant</h1>
+  <p>Ask about our AI solutions, software services, and portfolio case studies—or securely analyze an uploaded file.</p>
+  <span class="status-pill">Secure session • {st.session_state['thread_id'][:8]} • LangSmith operational tracing</span>
+</div>
+""", unsafe_allow_html=True)
 
 # Display message history
 for idx, message in enumerate(st.session_state['message_history']):
