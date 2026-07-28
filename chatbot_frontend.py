@@ -1,9 +1,9 @@
 import streamlit as st
 import os
-from chatbot_backend import chatbot, langsmith_client, langsmith_project
+from chatbot_backend import chatbot
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.tracers.context import collect_runs
-from langsmith import tracing_context
+from langsmith import Client as LangSmithClient, tracing_context
 import uuid
 import pandas as pd
 from pypdf import PdfReader
@@ -15,7 +15,21 @@ from openai import RateLimitError
 # Set page config
 st.set_page_config(page_title="100Solutionz AI Assistant", layout="wide", page_icon="🤖")
 
-ls_client = langsmith_client
+langsmith_project = os.getenv("LANGSMITH_PROJECT") or os.getenv("LANGCHAIN_PROJECT") or "solutionz-chatbot"
+langsmith_api_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
+langsmith_endpoint = os.getenv("LANGSMITH_ENDPOINT") or os.getenv("LANGCHAIN_ENDPOINT") or "https://api.smith.langchain.com"
+ls_client = None
+if langsmith_api_key:
+    try:
+        ls_client = LangSmithClient(
+            api_key=langsmith_api_key,
+            api_url=langsmith_endpoint,
+            hide_inputs=lambda _: {},
+            hide_outputs=lambda _: {},
+            hide_metadata=True,
+        )
+    except Exception as err:
+        print(f"LangSmith client initialization failed: {type(err).__name__}")
 
 # Upload limits protect the app from oversized or malformed user-supplied files.
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
