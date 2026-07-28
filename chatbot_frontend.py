@@ -42,16 +42,28 @@ st.markdown("""
 langsmith_project = os.getenv("LANGSMITH_PROJECT") or os.getenv("LANGCHAIN_PROJECT") or "solutionz-chatbot"
 langsmith_api_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
 langsmith_endpoint = os.getenv("LANGSMITH_ENDPOINT") or os.getenv("LANGCHAIN_ENDPOINT") or "https://api.smith.langchain.com"
+def is_true(value, default=True):
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+hide_trace_data = is_true(os.getenv("LANGSMITH_HIDE_INPUTS"), default=True)
+hide_trace_metadata = is_true(os.getenv("LANGSMITH_HIDE_METADATA"), default=True)
+
 ls_client = None
 if langsmith_api_key:
     try:
-        ls_client = LangSmithClient(
-            api_key=langsmith_api_key,
-            api_url=langsmith_endpoint,
-            hide_inputs=lambda _: {},
-            hide_outputs=lambda _: {},
-            hide_metadata=True,
-        )
+        client_options = {
+            "api_key": langsmith_api_key,
+            "api_url": langsmith_endpoint,
+        }
+        if hide_trace_data:
+            client_options["hide_inputs"] = lambda _: {}
+            client_options["hide_outputs"] = lambda _: {}
+        if hide_trace_metadata:
+            client_options["hide_metadata"] = True
+        ls_client = LangSmithClient(**client_options)
     except Exception as err:
         print(f"LangSmith client initialization failed: {type(err).__name__}")
 
