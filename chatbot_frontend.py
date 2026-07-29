@@ -107,17 +107,32 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-langsmith_project = os.getenv("LANGSMITH_PROJECT") or os.getenv("LANGCHAIN_PROJECT") or "solutionz-chatbot"
-langsmith_api_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
-langsmith_endpoint = os.getenv("LANGSMITH_ENDPOINT") or os.getenv("LANGCHAIN_ENDPOINT") or "https://api.smith.langchain.com"
+def get_env_frontend(primary, legacy=None, default=None):
+    val = os.getenv(primary) or (os.getenv(legacy) if legacy else None)
+    if val:
+        return str(val).strip()
+    try:
+        if hasattr(st, "secrets"):
+            if primary in st.secrets:
+                return str(st.secrets[primary]).strip()
+            if legacy and legacy in st.secrets:
+                return str(st.secrets[legacy]).strip()
+    except Exception:
+        pass
+    return default
+
+langsmith_project = get_env_frontend("LANGSMITH_PROJECT", "LANGCHAIN_PROJECT", "solutionz-chatbot")
+project_name = langsmith_project
+langsmith_api_key = get_env_frontend("LANGSMITH_API_KEY", "LANGCHAIN_API_KEY")
+langsmith_endpoint = get_env_frontend("LANGSMITH_ENDPOINT", "LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
 
 def is_true(value, default=True):
     if value is None:
         return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
-hide_trace_data = is_true(os.getenv("LANGSMITH_HIDE_INPUTS"), default=True)
-hide_trace_metadata = is_true(os.getenv("LANGSMITH_HIDE_METADATA"), default=True)
+hide_trace_data = is_true(get_env_frontend("LANGSMITH_HIDE_INPUTS"), default=False)
+hide_trace_metadata = is_true(get_env_frontend("LANGSMITH_HIDE_METADATA"), default=False)
 
 ls_client = None
 if langsmith_api_key:
