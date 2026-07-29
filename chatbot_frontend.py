@@ -423,11 +423,14 @@ if user_input:
                     "[CONFIDENCE]\n100"
                 )
             except Exception as stream_err:
+                err_detail = str(stream_err) or type(stream_err).__name__
                 print(f"Chat request failed: {type(stream_err).__name__}: {stream_err}")
                 full_response = (
-                    "[RESPONSE]\nI could not process your request right now. Please try again shortly.\n\n"
-                    "[REASONING]\nAn unexpected server-side error occurred while processing the request.\n\n"
-                    "[CONFIDENCE]\n0"
+                    f"[RESPONSE]\nI could not process your request right now.\n\n"
+                    f"⚠️ **Server Log:** `{err_detail}`\n\n"
+                    f"Please verify your API Key in `.env` or Streamlit Cloud Secrets.\n\n"
+                    f"[REASONING]\n{type(stream_err).__name__}: {err_detail}\n\n"
+                    f"[CONFIDENCE]\n0"
                 )
 
         # Final Metadata Parsing
