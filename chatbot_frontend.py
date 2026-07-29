@@ -14,39 +14,107 @@ from openai import RateLimitError
 
 # Set page config
 st.set_page_config(page_title="100Solutionz AI Assistant", layout="wide", page_icon="🤖")
+
+# Custom CSS for ChatGPT/Copilot Style UI
 st.markdown("""
 <style>
-    :root { --accent: #4ade80; --blue: #60a5fa; --ink: #08111f; }
-    .stApp { background: radial-gradient(circle at 82% 3%, rgba(37, 99, 235, .17), transparent 30%), radial-gradient(circle at 5% 75%, rgba(34, 197, 94, .10), transparent 32%), #08111f; }
-    [data-testid="stSidebar"] { background: linear-gradient(180deg, #0d1a2d 0%, #0a1424 100%); border-right: 1px solid rgba(148,163,184,.16); }
-    [data-testid="stSidebar"] > div:first-child { padding-top: 1.4rem; }
-    .brand-card { padding: 1.2rem; border-radius: 18px; background: linear-gradient(135deg, rgba(96,165,250,.17), rgba(74,222,128,.11)); border: 1px solid rgba(125,211,252,.24); margin-bottom: 1rem; }
-    .brand-kicker { color: #86efac; font-size: .72rem; letter-spacing: .12em; font-weight: 800; text-transform: uppercase; }
-    .brand-title { color: #f8fafc; font-size: 1.38rem; line-height: 1.15; font-weight: 800; margin-top: .3rem; }
-    .brand-copy { color: #b8c7db; font-size: .82rem; margin-top: .45rem; line-height: 1.45; }
-    .hero { padding: 1.7rem 1.85rem; margin: .4rem 0 1.35rem; border-radius: 24px; background: linear-gradient(120deg, rgba(30,58,138,.42), rgba(6,78,59,.28)); border: 1px solid rgba(125,211,252,.22); box-shadow: 0 18px 50px rgba(0,0,0,.18); }
-    .hero-kicker { color: #86efac; font-size: .78rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-    .hero h1 { color: #f8fafc; margin: .35rem 0 .42rem; font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.06; }
-    .hero p { color: #b9c8da; margin: 0; font-size: 1rem; }
-    .status-pill { display:inline-block; margin-top:.8rem; padding:.33rem .7rem; border-radius: 999px; font-size:.78rem; color:#bbf7d0; background:rgba(34,197,94,.12); border:1px solid rgba(74,222,128,.24); }
-    [data-testid="stChatMessage"] { border: 1px solid rgba(148,163,184,.14); border-radius: 18px; padding: .35rem .55rem; margin-bottom: .8rem; background: rgba(15,23,42,.48); }
-    [data-testid="stChatInput"] { border-radius: 18px; border: 1px solid rgba(96,165,250,.5); background: rgba(15,23,42,.86); box-shadow: 0 10px 28px rgba(0,0,0,.2); }
-    [data-testid="stChatInput"]:focus-within { border-color: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.12); }
-    [data-testid="stFileUploader"] { padding: .65rem; border-radius: 14px; border: 1px dashed rgba(125,211,252,.34); background: rgba(15,23,42,.38); }
-    .stButton > button { border-radius: 12px; border: 1px solid rgba(125,211,252,.25); background: rgba(30,41,59,.7); color: #e2e8f0; transition: .2s ease; }
-    .stButton > button:hover { border-color: #4ade80; color: #f0fdf4; background: rgba(22,101,52,.28); transform: translateY(-1px); }
-    [data-testid="stSidebar"] .stAlert { border-radius: 14px; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .stApp { 
+        background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.12), transparent 45%), #090d16;
+        color: #f1f5f9;
+    }
+    
+    [data-testid="stSidebar"] { 
+        background: #0d1527; 
+        border-right: 1px solid rgba(255, 255, 255, 0.08); 
+    }
+    
+    .centered-header {
+        text-align: center;
+        padding: 2.5rem 1rem 1rem 1rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .brand-tag {
+        display: inline-block;
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid rgba(96, 165, 250, 0.3);
+        margin-bottom: 1rem;
+    }
+    
+    .centered-header h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+    
+    .centered-header p {
+        color: #94a3b8;
+        font-size: 1.05rem;
+    }
+    
+    /* Streamlit Chat elements */
+    [data-testid="stChatMessage"] { 
+        border: 1px solid rgba(255, 255, 255, 0.07); 
+        border-radius: 16px; 
+        padding: 0.8rem 1.1rem; 
+        margin-bottom: 1rem; 
+        background: rgba(15, 23, 42, 0.55); 
+    }
+    
+    [data-testid="stChatInput"] { 
+        border-radius: 24px; 
+        border: 1px solid rgba(255, 255, 255, 0.15); 
+        background: rgba(15, 23, 42, 0.85); 
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); 
+        max-width: 820px;
+        margin: 0 auto;
+    }
+    
+    [data-testid="stChatInput"]:focus-within { 
+        border-color: #3b82f6; 
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); 
+    }
+    
+    .stButton > button { 
+        border-radius: 12px; 
+        border: 1px solid rgba(255, 255, 255, 0.12); 
+        background: rgba(30, 41, 59, 0.6); 
+        color: #e2e8f0; 
+        transition: 0.2s ease; 
+        padding: 0.6rem 1rem;
+    }
+    .stButton > button:hover { 
+        border-color: #3b82f6; 
+        color: #ffffff; 
+        background: rgba(59, 130, 246, 0.25); 
+    }
 </style>
 """, unsafe_allow_html=True)
 
 langsmith_project = os.getenv("LANGSMITH_PROJECT") or os.getenv("LANGCHAIN_PROJECT") or "solutionz-chatbot"
 langsmith_api_key = os.getenv("LANGSMITH_API_KEY") or os.getenv("LANGCHAIN_API_KEY")
 langsmith_endpoint = os.getenv("LANGSMITH_ENDPOINT") or os.getenv("LANGCHAIN_ENDPOINT") or "https://api.smith.langchain.com"
+
 def is_true(value, default=True):
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
-
 
 hide_trace_data = is_true(os.getenv("LANGSMITH_HIDE_INPUTS"), default=True)
 hide_trace_metadata = is_true(os.getenv("LANGSMITH_HIDE_METADATA"), default=True)
@@ -68,7 +136,7 @@ if langsmith_api_key:
         print(f"LangSmith client initialization failed: {type(err).__name__}")
 
 # Upload limits protect the app from oversized or malformed user-supplied files.
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_UPLOAD_BYTES = 30 * 1024 * 1024  # 30 MB limit
 MAX_PDF_PAGES = 50
 MAX_SPREADSHEET_ROWS = 1_000
 MAX_CONTEXT_CHARS = 30_000
@@ -81,7 +149,7 @@ def extract_file_content(uploaded_file):
     try:
         filename = uploaded_file.name
         if uploaded_file.size > MAX_UPLOAD_BYTES:
-            return f"\n[File: {filename}] was skipped because it exceeds the 10 MB safety limit.\n"
+            return f"\n[File: {filename}] was skipped because it exceeds the 30 MB limit.\n"
 
         if uploaded_file.type == "application/pdf":
             reader = PdfReader(uploaded_file)
@@ -108,7 +176,7 @@ def extract_file_content(uploaded_file):
         if uploaded_file.type.startswith("image/"):
             image = Image.open(uploaded_file)
             if image.width * image.height > Image.MAX_IMAGE_PIXELS:
-                return f"\n[File: {filename}] was skipped because its image dimensions exceed the safety limit.\n"
+                return f"\n[File: {filename}] was skipped because its image dimensions exceed limits.\n"
             image.load()
             mime_type = uploaded_file.type
             buffered = BytesIO()
@@ -154,7 +222,7 @@ def reset_chat():
 def submit_feedback(run_id, score, msg_idx):
     """Sends thumbs up/down user feedback to LangSmith."""
     if not ls_client or not run_id:
-        st.info("Feedback captured locally (LangSmith API key needed for cloud sync).")
+        st.info("Feedback captured locally.")
         return
     try:
         ls_client.create_feedback(
@@ -182,23 +250,20 @@ if 'thread_id' not in st.session_state:
 # **************************************** Sidebar UI *********************************
 
 st.sidebar.markdown(f"""
-<div class="brand-card">
-  <div class="brand-kicker">100Solutionz</div>
-  <div class="brand-title">Intelligent AI Workspace</div>
-  <div class="brand-copy">Secure AI assistance for product, engineering, and company information.</div>
-  <div class="status-pill">Session {user_id}</div>
+<div style="padding: 1rem; border-radius: 14px; background: rgba(30,41,59,0.5); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem;">
+  <div style="color: #60a5fa; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">100Solutionz AI</div>
+  <div style="color: #f8fafc; font-size: 1.15rem; font-weight: 700; margin-top: 0.2rem;">Workspace</div>
+  <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.3rem;">Session ID: {user_id}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# LangSmith Status Badge
-project_name = langsmith_project
 if ls_client:
-    st.sidebar.success(f"📊 LangSmith Tracing Active\n\nProject: **{project_name}**")
+    st.sidebar.success(f"📊 LangSmith Tracing Active\n\nProject: **{langsmith_project}**")
 else:
     st.sidebar.warning("📊 LangSmith Tracing Inactive")
 
 uploaded_files = st.sidebar.file_uploader(
-    "📎 Upload Data (PDF, CSV, XLS, Image)", 
+    "📎 Add photos & files", 
     type=["pdf", "csv", "xlsx", "png", "jpg", "jpeg"],
     accept_multiple_files=True
 )
@@ -217,40 +282,53 @@ for t_id in st.session_state['chat_threads'][::-1]:
         st.rerun()
 
 st.sidebar.divider()
-if st.sidebar.checkbox('🔍 Show Backend Process'):
-    st.sidebar.markdown("### 🏗️ Technical Workflow")
+if st.sidebar.checkbox('🔍 Show Technical Graph'):
+    st.sidebar.markdown("### 🏗️ Backend Graph")
     backend_graph = """
     digraph G {
         rankdir=TB;
-        node [shape=box, style=filled, color="#E1E1E1", fontname="Verdana", fontsize=10];
-        
-        user [label="User Query", shape=ellipse, color="#A1D490"];
-        files [label="PDF/Excel/Image", shape=note, color="#A1C4FD"];
-        extract [label="Data Extraction\\n(pypdf/pandas)"];
-        agent [label="LangGraph Agent\\n(Deep Analysis)"];
-        retry [label="Confidence Check\\n(<60%? Retry)", color="#FFD0D0"];
-        output [label="Final Output\\n+ Reasoning", shape=ellipse, color="#A1D490"];
-
+        node [shape=box, style=filled, color="#1e293b", fontcolor="#ffffff", fontname="Inter", fontsize=10];
+        user [label="User Query", shape=ellipse, color="#3b82f6"];
+        extract [label="File Extraction (pypdf/pandas)"];
+        agent [label="LangGraph Agent"];
+        output [label="Response + Reasoning", shape=ellipse, color="#10b981"];
         user -> agent;
-        files -> extract;
-        extract -> agent [label="Context"];
-        agent -> retry;
-        retry -> agent [label="Retry if low"];
-        retry -> output [label="Success"];
+        extract -> agent;
+        agent -> output;
     }
     """
     st.sidebar.graphviz_chart(backend_graph)
 
 # **************************************** Main UI ************************************
 
-st.markdown(f"""
-<div class="hero">
-  <div class="hero-kicker">100Solutionz • AI & Software Studio</div>
-  <h1>Intelligent AI Assistant</h1>
-  <p>Ask about our AI solutions, software services, and portfolio case studies—or securely analyze an uploaded file.</p>
-  <span class="status-pill">Secure session • {st.session_state['thread_id'][:8]} • LangSmith operational tracing</span>
+# Centered Header
+st.markdown("""
+<div class="centered-header">
+  <div class="brand-tag">100SOLUTIONZ AI STUDIO</div>
+  <h1>What’s on your mind today?</h1>
+  <p>Ask about custom AI software, web & mobile apps, company portfolio—or analyze an attached document.</p>
 </div>
 """, unsafe_allow_html=True)
+
+# Interactive Action Menu Cards (Only show when starting chat or top level)
+if not st.session_state['message_history']:
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📎  Add photos & files — Upload from computer", use_container_width=True):
+            st.info("👈 Upload your files (PDF, CSV, XLS, Images) using the sidebar uploader.")
+        if st.button("🌐  Web search — Find real-time news and info", use_container_width=True):
+            st.session_state['pending_prompt'] = "Perform a web search to check current software development trends."
+            st.rerun()
+    with col2:
+        if st.button("📣  Deep research — Get a detailed report", use_container_width=True):
+            st.session_state['pending_prompt'] = "Provide a comprehensive report on 100Solutionz core services, tech stack, and portfolio."
+            st.rerun()
+        if st.button("🖼️  Create image & visualize — Visualize anything", use_container_width=True):
+            st.session_state['pending_prompt'] = "What software products and AI architecture solutions does 100Solutionz build?"
+            st.rerun()
+
+# Handle preset prompt click
+preset_prompt = st.session_state.pop('pending_prompt', None)
 
 # Display message history
 for idx, message in enumerate(st.session_state['message_history']):
@@ -259,22 +337,23 @@ for idx, message in enumerate(st.session_state['message_history']):
         if 'reasoning' in message:
             st.caption(f"🎯 **Reasoning:** {message['reasoning']} | **Confidence:** {message['confidence']}%")
             
-            # Interactive Feedback Section for Assistant Responses
+            # Interactive Feedback Section
             run_id = message.get('run_id')
-            col1, col2, _ = st.columns([1, 1, 10])
-            with col1:
+            col_f1, col_f2, _ = st.columns([1, 1, 10])
+            with col_f1:
                 if st.button("👍", key=f"up_{idx}"):
                     submit_feedback(run_id, 1.0, idx)
-            with col2:
+            with col_f2:
                 if st.button("👎", key=f"down_{idx}"):
                     submit_feedback(run_id, 0.0, idx)
 
-user_input = st.chat_input('Analyze files or ask a question...')
+# Chat Input
+user_input = st.chat_input('Ask anything...') or preset_prompt
 
 if user_input:
     # 1. Process files for the CURRENT request
     text_context = ""
-    images_to_send = [] # Store tuple of (mime_type, base64, filename)
+    images_to_send = []
     
     if uploaded_files:
         with st.spinner("Extracting data from attachments..."):
@@ -286,7 +365,6 @@ if user_input:
                 else:
                     text_context += result
 
-    # Truncation safety check to prevent context length error
     if len(text_context) > MAX_CONTEXT_CHARS:
         text_context = text_context[:MAX_CONTEXT_CHARS] + f"\n\n[Attachment context truncated for safety. Original size: {len(text_context)} characters.]"
 
