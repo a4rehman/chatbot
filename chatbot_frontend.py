@@ -104,6 +104,86 @@ st.markdown("""
         color: #ffffff; 
         background: rgba(59, 130, 246, 0.25); 
     }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+    /* Chat message polish */
+    [data-testid="stChatMessage"] { 
+        transition: 0.2s ease;
+    }
+    [data-testid="stChatMessage"]:hover { 
+        border-color: rgba(96, 165, 250, 0.25);
+        background: rgba(15, 23, 42, 0.75);
+    }
+    [data-testid="stChatMessageAvatar"] { 
+        font-size: 1.3rem; 
+    }
+
+    /* Typing indicator */
+    .typing-indicator { display: inline-flex; gap: 6px; padding: 8px 4px; }
+    .typing-indicator span {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #60a5fa;
+        animation: typingBlink 1.2s infinite ease-in-out;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBlink {
+        0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-4px); }
+    }
+
+    /* Quick-action cards */
+    .quick-actions-title {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin: 0 0 0.5rem 0.25rem;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.45);
+        padding: 0.75rem 0.9rem;
+        transition: 0.2s ease;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+        border-color: rgba(96, 165, 250, 0.45);
+        background: rgba(30, 41, 59, 0.55);
+        transform: translateY(-1px);
+    }
+
+    /* Expander styling */
+    [data-testid="stExpander"] {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(30, 41, 59, 0.35);
+    }
+    [data-testid="stExpander"] summary { color: #94a3b8; }
+    [data-testid="stExpander"] summary:hover { color: #60a5fa; }
+
+    /* Confidence progress bar */
+    [data-testid="stProgress"] > div > div > div > div {
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+    }
+
+    /* App footer */
+    .app-footer {
+        text-align: center;
+        color: #475569;
+        font-size: 0.78rem;
+        padding: 1.5rem 1rem 0.5rem 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        margin-top: 2.5rem;
+        letter-spacing: 0.02em;
+    }
+    .app-footer span { margin: 0 0.4rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -217,8 +297,9 @@ def parse_metadata(content):
         clean_text = parts[0].replace("[RESPONSE]", "").strip()
         if "[CONFIDENCE]" in parts[1]:
             meta_parts = parts[1].split("[CONFIDENCE]")
-            reasoning = meta_parts[0].strip()
-            confidence = "".join(filter(str.isdigit, meta_parts[1])).strip()
+            reasoning = meta_parts[0].strip() or "N/A"
+            conf_digits = "".join(filter(str.isdigit, meta_parts[1])).strip()
+            confidence = conf_digits if conf_digits else "N/A"
             
     return clean_text, reasoning, confidence
 
@@ -327,31 +408,43 @@ st.markdown("""
 
 # Interactive Action Menu Cards (Only show when starting chat or top level)
 if not st.session_state['message_history']:
+    st.markdown('<div class="quick-actions-title">✨ Quick actions — try one to get started</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📎  Add photos & files — Upload from computer", use_container_width=True):
-            st.info("👈 Upload your files (PDF, CSV, XLS, Images) using the sidebar uploader.")
-        if st.button("🌐  Web search — Find real-time news and info", use_container_width=True):
-            st.session_state['pending_prompt'] = "Perform a web search to check current software development trends."
-            st.rerun()
+        with st.container(border=True):
+            st.markdown("📎 **Add photos & files**")
+            st.caption("Upload PDFs, CSVs, XLSX, or images from your device.")
+            if st.button("Upload from computer", use_container_width=True):
+                st.info("👈 Use the sidebar uploader to add files (PDF, CSV, XLS, Images).")
+        with st.container(border=True):
+            st.markdown("🌐 **Web search**")
+            st.caption("Find real-time news, trends, and information.")
+            if st.button("Search the web", use_container_width=True):
+                st.session_state['pending_prompt'] = "Perform a web search to check current software development trends."
+                st.rerun()
     with col2:
-        if st.button("📣  Deep research — Get a detailed report", use_container_width=True):
-            st.session_state['pending_prompt'] = "Provide a comprehensive report on 100Solutionz core services, tech stack, and portfolio."
-            st.rerun()
-        if st.button("🖼️  Create image & visualize — Visualize anything", use_container_width=True):
-            st.session_state['pending_prompt'] = "What software products and AI architecture solutions does 100Solutionz build?"
-            st.rerun()
+        with st.container(border=True):
+            st.markdown("📣 **Deep research**")
+            st.caption("Get a detailed report on 100Solutionz services and portfolio.")
+            if st.button("Start research", use_container_width=True):
+                st.session_state['pending_prompt'] = "Provide a comprehensive report on 100Solutionz core services, tech stack, and portfolio."
+                st.rerun()
+        with st.container(border=True):
+            st.markdown("🖼️ **Visualize & explore**")
+            st.caption("Discover AI products and architecture solutions.")
+            if st.button("Explore solutions", use_container_width=True):
+                st.session_state['pending_prompt'] = "What software products and AI architecture solutions does 100Solutionz build?"
+                st.rerun()
 
 # Handle preset prompt click
 preset_prompt = st.session_state.pop('pending_prompt', None)
 
 # Display message history
 for idx, message in enumerate(st.session_state['message_history']):
-    with st.chat_message(message['role']):
+    avatar = "🙂" if message['role'] == 'user' else "🤖"
+    with st.chat_message(message['role'], avatar=avatar):
         st.markdown(message['content'])
         if 'reasoning' in message:
-            st.caption(f"🎯 **Reasoning:** {message['reasoning']} | **Confidence:** {message['confidence']}%")
-            
             # Interactive Feedback Section
             run_id = message.get('run_id')
             col_f1, col_f2, _ = st.columns([1, 1, 10])
@@ -361,6 +454,17 @@ for idx, message in enumerate(st.session_state['message_history']):
             with col_f2:
                 if st.button("👎", key=f"down_{idx}"):
                     submit_feedback(run_id, 0.0, idx)
+
+            with st.expander("🔍 **View reasoning & confidence**", expanded=False):
+                st.markdown(f"**Reasoning:** {message.get('reasoning', 'N/A')}")
+                try:
+                    conf_num = int(message.get('confidence', 'N/A'))
+                except (TypeError, ValueError):
+                    conf_num = None
+                if conf_num is not None:
+                    st.progress(max(0, min(conf_num, 100)) / 100, text=f"Confidence: {conf_num}%")
+                else:
+                    st.caption("Confidence: N/A")
 
 # Chat Input
 user_input = st.chat_input('Ask anything...') or preset_prompt
@@ -385,7 +489,7 @@ if user_input:
 
     # 2. Update UI with User message
     st.session_state['message_history'].append({'role': 'user', 'content': user_input})
-    with st.chat_message('user'):
+    with st.chat_message('user', avatar='🙂'):
         st.markdown(user_input)
 
     # 3. Build the LangGraph input with metadata tags for LangSmith
@@ -410,9 +514,13 @@ if user_input:
 
     # 4. Get AI Response with LangSmith Run Capture
     run_id = None
-    with st.chat_message('assistant'):
+    with st.chat_message('assistant', avatar='🤖'):
         full_response = ""
         placeholder = st.empty()
+        placeholder.markdown(
+            '<div class="typing-indicator"><span></span><span></span><span></span></div>',
+            unsafe_allow_html=True
+        )
         
         with st.spinner("Deep Analysis..."):
             try:
@@ -451,7 +559,16 @@ if user_input:
         # Final Metadata Parsing
         clean_ans, reason, conf = parse_metadata(full_response)
         placeholder.markdown(clean_ans)
-        st.caption(f"🎯 **Reasoning:** {reason} | **Confidence:** {conf}%")
+        try:
+            conf_num = int(conf)
+        except (TypeError, ValueError):
+            conf_num = None
+        with st.expander("🔍 **View reasoning & confidence**", expanded=False):
+            st.markdown(f"**Reasoning:** {reason}")
+            if conf_num is not None:
+                st.progress(max(0, min(conf_num, 100)) / 100, text=f"Confidence: {conf_num}%")
+            else:
+                st.caption("Confidence: N/A")
 
     # 5. Save to history with run_id for feedback tracking
     st.session_state['message_history'].append({
@@ -461,3 +578,12 @@ if user_input:
         'confidence': conf,
         'run_id': run_id
     })
+
+# App Footer
+st.markdown("""
+<div class="app-footer">
+  <span>🤖 100Solutionz AI Studio</span>·
+  <span>Built by AI Engineer Abdul Rehman</span>·
+  <span>v2.0</span>
+</div>
+""", unsafe_allow_html=True)
