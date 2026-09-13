@@ -117,6 +117,7 @@ When `LANGSMITH_API_KEY` is set, every run is traced to your LangSmith project:
 ```
 ├── chatbot_frontend.py      # Streamlit UI, uploads, streaming, feedback
 ├── chatbot_backend.py       # LangGraph agent, tools, SQLite checkpointer
+├── response_utils.py        # Shared [RESPONSE]/[REASONING]/[CONFIDENCE] parser
 ├── evals.py                 # Evaluation harness
 ├── requirements.txt         # Python dependencies
 ├── .env.example             # Template for environment variables

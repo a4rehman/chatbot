@@ -12,6 +12,8 @@ from PIL import Image
 import base64
 from openai import RateLimitError
 
+from response_utils import parse_response
+
 # Set page config
 st.set_page_config(page_title="100Solutionz AI Assistant", layout="wide", page_icon="🤖")
 
@@ -288,20 +290,8 @@ def extract_file_content(uploaded_file):
 
 def parse_metadata(content):
     """Helper to clean up markers from response for clean UI display."""
-    reasoning = "N/A"
-    confidence = "N/A"
-    clean_text = content
-    
-    if "[REASONING]" in content:
-        parts = content.split("[REASONING]")
-        clean_text = parts[0].replace("[RESPONSE]", "").strip()
-        if "[CONFIDENCE]" in parts[1]:
-            meta_parts = parts[1].split("[CONFIDENCE]")
-            reasoning = meta_parts[0].strip() or "N/A"
-            conf_digits = "".join(filter(str.isdigit, meta_parts[1])).strip()
-            confidence = conf_digits if conf_digits else "N/A"
-            
-    return clean_text, reasoning, confidence
+    clean_text, reason, confidence = parse_response(content)
+    return clean_text, reason or "N/A", str(confidence) if confidence is not None else "N/A"
 
 def generate_user_id():
     if 'user_id' not in st.session_state:

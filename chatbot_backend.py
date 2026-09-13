@@ -11,6 +11,8 @@ from langsmith import Client as LangSmithClient
 import sqlite3
 import os
 
+from response_utils import parse_response
+
 load_dotenv()
 
 
@@ -156,13 +158,10 @@ def call_model(state: ChatState):
     
     try:
         if "[REASONING]" in content and "[CONFIDENCE]" in content:
-            parts = content.split("[REASONING]")
-            ans_part = parts[0].replace("[RESPONSE]", "").strip()
-            rest = parts[1].split("[CONFIDENCE]")
-            reasoning = rest[0].strip()
-            conf_str = "".join(filter(str.isdigit, rest[1]))
-            confidence = int(conf_str) if conf_str else 80
-            
+            _, parsed_reasoning, parsed_confidence = parse_response(content)
+            reasoning = parsed_reasoning or ""
+            confidence = parsed_confidence if parsed_confidence is not None else 80
+
             if confidence < 60 and retries < 2:
                 nudge = HumanMessage(content=f"Your previous response had low confidence ({confidence}%). Please provide a more accurate and confident response.")
                 return {"messages": [response, nudge], "retry_count": retries + 1}
